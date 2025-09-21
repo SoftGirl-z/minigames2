@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hedef Hayvan Oyunu</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #eaf6f6;
+    }
+    header {
+      background-color: #168aad;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #56cfe1;
+    }
+    .tab-button {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      background-color: #56cfe1;
+      border: none;
+      font-size: 1rem;
+      color: white;
+    }
+    .tab-button.active {
+      background-color: #72efdd;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+      padding: 1rem;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .info-bar {
+      display: flex;
+      justify-content: space-around;
+      background-color: #caffbf;
+      padding: 1rem;
+      font-weight: bold;
+    }
+    #game-area {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin: 1rem auto;
+      max-width: 600px;
+    }
+    .target {
+      background-color: #ffd6a5;
+      padding: 1rem;
+      text-align: center;
+      font-size: 2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .target:hover {
+      transform: scale(1.1);
+      background-color: #ffadad;
+    }
+    #end-screen {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 200px;
+      margin-top: 2rem;
+      background-color: #fdfcdc;
+      border: 2px dashed #ffa;
+      padding: 2rem;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: #06d6a0;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hedef Hayvan Oyunu</h1>
+  </header>
+
+  <nav>
+    <button class="tab-button active" data-tab="game">Oyun</button>
+    <button class="tab-button" data-tab="scores">Skorlar</button>
+    <button class="tab-button" data-tab="about">Hakkında</button>
+  </nav>
+
+  <section id="game" class="tab-content active">
+    <div class="info-bar">
+      <span id="target">Hedef: 🐶</span>
+      <span id="score">Puan: 0</span>
+      <span id="combo">Kombo: 0</span>
+      <span id="level">Seviye: 1</span>
+      <span id="timer">Süre: 60</span>
+    </div>
+    <div id="game-area"></div>
+    <div id="end-screen">
+      <h2>Oyun Bitti!</h2>
+      <p>Skorunuz: <span id="final-score"></span></p>
+      <button id="restart-btn">Tekrar Oyna</button>
+    </div>
+  </section>
+
+  <section id="scores" class="tab-content">
+    <h2>En Yüksek Skorlar</h2>
+    <ul id="score-list"></ul>
+    <button id="back-to-game">Geri Dön</button>
+  </section>
+
+  <section id="about" class="tab-content">
+    <h2>Hakkında</h2>
+    <p>Bu oyun, reflekslerinizi test etmek ve eğlenmek için tasarlanmıştır. Doğru hayvanı seçin ve en yüksek puanı elde edin!</p>
+  </section>
+
+  <script>
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const gameArea = document.getElementById('game-area');
+    const targetIndicator = document.getElementById('target');
+    const scoreEl = document.getElementById('score');
+    const comboEl = document.getElementById('combo');
+    const levelEl = document.getElementById('level');
+    const timerEl = document.getElementById('timer');
+    const endScreen = document.getElementById('end-screen');
+    const finalScoreSpan = document.getElementById('final-score');
+    const restartBtn = document.getElementById('restart-btn');
+    const scoreList = document.getElementById('score-list');
+    const backToGameBtn = document.getElementById('back-to-game');
+
+    const animals = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯'];
+    const totalTargets = 20;
+    let score = 0, combo = 0, multiplier = 1, level = 1;
+    let timeLeft = 60, gameDuration = 60, timerInterval;
+    let targetAnimal = '🐶';
+    let gameActive = false;
+
+    function pickTargetAnimal() {
+      return animals[Math.floor(Math.random() * animals.length)];
+    }
+
+    function createTarget(animal) {
+      const div = document.createElement('div');
+      div.className = 'target';
+      div.textContent = animal;
+      div.addEventListener('click', () => {
+        if (!gameActive) return;
+        if (animal === targetAnimal) {
+          combo++;
+          if (combo % 5 === 0) level++;
+          multiplier = 1 + Math.floor(combo / 5);
+          score += 10 * multiplier;
+          targetAnimal = pickTargetAnimal();
+          targetIndicator.textContent = 'Hedef: ' + targetAnimal;
+        } else {
+          combo = 0;
+          multiplier = 1;
+          score -= 5;
+        }
+        updateInfo();
+        refreshTargets();
+      });
+      gameArea.appendChild(div);
+    }
+
+    function refreshTargets() {
+      clearTargets();
+      for (let i = 0; i < totalTargets; i++) {
+        createTarget(pickTargetAnimal());
+      }
+    }
+
+    function clearTargets() {
+      gameArea.innerHTML = '';
+    }
+
+    function updateInfo() {
+      scoreEl.textContent = 'Puan: ' + score;
+      comboEl.textContent = 'Kombo: ' + combo;
+      levelEl.textContent = 'Seviye: ' + level;
+    }
+
+    function startGame() {
+      clearTargets();
+      score = 0;
+      combo = 0;
+      multiplier = 1;
+      level = 1;
+      timeLeft = gameDuration;
+      gameActive = true;
+      endScreen.style.display = 'none';
+      updateInfo();
+      targetAnimal = pickTargetAnimal();
+      targetIndicator.textContent = 'Hedef: ' + targetAnimal;
+      refreshTargets();
+
+      timerEl.textContent = 'Süre: ' + timeLeft;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = 'Süre: ' + timeLeft;
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function endGame() {
+      clearInterval(timerInterval);
+      gameActive = false;
+      finalScoreSpan.textContent = score;
+      endScreen.style.display = 'flex';
+      saveScore(score);
+    }
+
+    function saveScore(newScore) {
+      let scores = JSON.parse(localStorage.getItem('topScores')) || [];
+      scores.push(newScore);
+      scores.sort((a, b) => b - a);
+      scores = scores.slice(0, 10);
+      localStorage.setItem('topScores', JSON.stringify(scores));
+    }
+
+    function showScores() {
+      const scores = JSON.parse(localStorage.getItem('topScores')) || [];
+      scoreList.innerHTML = '';
+      scores.forEach((s, i) => {
+        const li = document.createElement('li');
+        li.textContent = `${i + 1}. ${s} puan`;
+        scoreList.appendChild(li);
+      });
+    }
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        tabContents.forEach(tc => tc.classList.remove('active'));
+        document.getElementById(btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'scores') showScores();
+      });
+    });
+
+    backToGameBtn.addEventListener('click', () => {
+      document.querySelector('[data-tab="game"]').click();
+    });
+
+    restartBtn.addEventListener('click', startGame);
+
+    // Otomatik başlat
+    window.addEventListener('load', startGame);
+  </script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Color Tap Rush - Hayvan Temalı</title>
+ <style>
+ /* --- Genel --- */
+  body {
+    margin: 0; padding: 0;
+    background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #app {
+    max-width: 420px;
+    margin: 20px auto;
+    background: rgba(255 255 255 / 0.75);
+    border-radius: 12px;
+    padding: 15px 20px 30px 20px;
+    box-shadow: 0 8px 25px rgb(0 0 0 / 0.2);
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 6px;
+    color: #3a5a40;
+  }
+
+  /* --- Sekme butonları --- */
+  #tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+  .tab-btn {
+    cursor: pointer;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background: #a3cbb8;
+    color: #2a3e22;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
+    transition: background 0.3s ease;
+    user-select: none;
+  }
+  .tab-btn:hover {
+    background: #6a927a;
+    color: white;
+  }
+  .tab-btn.active {
+    background: #3a5a40;
+    color: white;
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.35);
+  }
+
+  /* --- Sekme içerikleri --- */
+  .tab-content {
+    display: none;
+  }
+  .tab-content.active {
+    display: block;
+  }
+
+  /* --- Oyun alanı --- */
+  #game {
+    position: relative;
+    width: 100%;
+    height: 480px;
+    background: #dcedc1;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: inset 0 0 15px #a3cbb8;
+  }
+
+  /* --- Hayvan kutuları --- */
+  .target {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    border-radius: 15px;
+    background: #fff9f0;
+    border: 3px solid #a3cbb8;
+    font-size: 44px;
+    line-height: 66px;
+    text-align: center;
+    user-select: none;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgb(0 0 0 / 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .target:active {
+    transform: scale(0.85);
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.3);
+  }
+
+  /* --- Bilgi paneli --- */
+  #info {
+    display: flex;
+    justify-content: space-between;
+    margin: 12px 0 10px 0;
+    font-weight: 600;
+    color: #2a3e22;
+    user-select: none;
+  }
+
+  #target-indicator {
+    font-size: 26px;
+    background: #a3cbb8;
+    padding: 6px 12px;
+    border-radius: 14px;
+    color: white;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+    user-select: none;
+  }
+
+  #timer, #score, #combo, #level {
+    font-size: 18px;
+    min-width: 85px;
+    text-align: center;
+  }
+
+  /* --- Bitiş ekranı --- */
+  #end-screen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(58,90,64,0.9);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    border-radius: 12px;
+    user-select: none;
+    z-index: 10;
+    display: none;
+  }
+
+  #end-screen button {
+    margin-top: 18px;
+    background: #fff9f0;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 18px;
+    font-weight: 700;
+    color: #3a5a40;
+    cursor: pointer;
+    box-shadow: 0 3px 7px rgb(0 0 0 / 0.2);
+    transition: background 0.25s ease;
+  }
+  #end-screen button:hover {
+    background: #a3cbb8;
+    color: white;
+  }
+
+  /* --- Skor tablosu --- */
+  #score-list {
+    padding-left: 18px;
+    font-size: 20px;
+    color: #3a5a40;
+  }
+  #score-list li {
+    margin: 8px 0;
+  }
+
+  /* Mobil uyumluluk */
+  @media (max-width: 480px) {
+    #app {
+      max-width: 100%;
+      padding: 10px 12px 25px 12px;
+    }
+    #game {
+      height: 380px;
+    }
+    .target {
+      width: 60px;
+      height: 60px;
+      font-size: 36px;
+      line-height: 54px;
+    }
+    #target-indicator {
+      font-size: 22px;
+      padding: 4px 10px;
+    }
+    #info > div {
+      font-size: 14px;
+      min-width: 65px;
+    }
+    #end-screen {
+      font-size: 22px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <h1>Color Tap Rush - Hayvan Teması</h1>
+    <div id="tabs">
+      <button class="tab-btn active" data-tab="game">Oyun</button>
+      <button class="tab-btn" data-tab="scores">Skor Tablosu</button>
+    </div>
+
+    <div id="game" class="tab-content active">
+      <div id="info">
+        <div id="target-indicator">🐶</div>
+        <div id="timer">Süre: 30</div>
+        <div id="score">Puan: 0</div>
+        <div id="combo">Kombo: 0</div>
+        <div id="level">Seviye: 1</div>
+      </div>
+      <div id="target-container"></div>
+      <div id="end-screen">
+        <div>Oyun Bitti!</div>
+        <div>Puanınız: <span id="final-score">0</span></div>
+        <button id="restart-btn">Yeniden Başla</button>
+      </div>
+    </div>
+
+    <div id="scores" class="tab-content">
+      <h2>En Yüksek 10 Skor</h2>
+      <ol id="score-list"></ol>
+      <button id="back-to-game">Oyuna Dön</button>
+    </div>
+  </div>
+
+  <script>
+(() => {
+  const animalsByLevel = [
+    ['🐶','🐱','🐰','🐻','🐸'],
+    ['🐶','🐱','🐰','🐻','🐸','🐵','🦊'],
+    ['🐶','🐱','🐰','🐻','🐸','🐵','🦊','🐼','🦁'],
+    ['🐶','🐱','🐰','🐻','🐸','🐵','🦊','🐼','🦁','🐨','🐮'],
+  ];
+
+  const maxLevel = animalsByLevel.length;
+  const totalTargets = 8;
+  const gameDuration = 30;
+
+  const targetContainer = document.getElementById('target-container');
+  const targetIndicator = document.getElementById('target-indicator');
+  const timerEl = document.getElementById('timer');
+  const scoreEl = document.getElementById('score');
+  const comboEl = document.getElementById('combo');
+  const levelEl = document.getElementById('level');
+  const endScreen = document.getElementById('end-screen');
+  const finalScoreSpan = document.getElementById('final-score');
+  const restartBtn = document.getElementById('restart-btn');
+  const scoreList = document.getElementById('score-list');
+  const backToGameBtn = document.getElementById('back-to-game');
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  let targets = [];
+  let targetPositions = [];
+  let targetAnimal = '';
+  let score = 0;
+  let combo = 0;
+  let multiplier = 1;
+  let level = 1;
+  let timeLeft = gameDuration;
+  let timerInterval = null;
+  let gameActive = false;
+
+  function randomRange(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function randomPosition() {
+    const containerRect = targetContainer.getBoundingClientRect();
+    const padding = 80;
+    const x = randomRange(0, containerRect.width - padding);
+    const y = randomRange(0, containerRect.height - padding);
+    return {x, y};
+  }
+
+  function uniquePosition(existingPositions) {
+    let pos;
+    let tries = 0;
+    do {
+      pos = randomPosition();
+      tries++;
+      const tooClose = existingPositions.some(p => {
+        const dx = p.x - pos.x;
+        const dy = p.y - pos.y;
+        return Math.sqrt(dx*dx + dy*dy) < 70;
+      });
+      if(!tooClose) break;
+      if(tries > 50) break;
+    } while(true);
+    return pos;
+  }
+
+  function pickTargetAnimal() {
+    const animals = animalsByLevel[Math.min(level-1, maxLevel-1)];
+    return animals[randomRange(0, animals.length-1)];
+  }
+
+  function clearTargets() {
+    targetContainer.innerHTML = '';
+    targets = [];
+    targetPositions = [];
+  }
+
+  function createTarget(animal) {
+    const div = document.createElement('div');
+    div.classList.add('target');
+    div.textContent = animal;
+
+    const pos = uniquePosition(targetPositions);
+    targetPositions.push(pos);
+    div.style.left = pos.x + 'px';
+    div.style.top = pos.y + 'px';
+
+    div.addEventListener('click', () => {
+      if(!gameActive) return;
+      if(div.textContent === targetAnimal) {
+        incrementScore();
+        changeTarget(div);
+            } else {
+        combo = 0;
+        multiplier = 1;
+        comboEl.textContent = 'Kombo: 0';
+      }
+    });
+
+    targetContainer.appendChild(div);
+    targets.push(div);
+  }
+
+  function generateTargets() {
+    clearTargets();
+    const animals = animalsByLevel[Math.min(level - 1, maxLevel - 1)];
+    targetAnimal = pickTargetAnimal();
+    targetIndicator.textContent = targetAnimal;
+    for (let i = 0; i < totalTargets; i++) {
+      const randomAnimal = animals[randomRange(0, animals.length - 1)];
+      createTarget(randomAnimal);
+    }
+  }
+
+  function incrementScore() {
+    combo++;
+    if (combo % 3 === 0) multiplier++;
+    const points = 10 * multiplier;
+    score += points;
+    scoreEl.textContent = `Puan: ${score}`;
+    comboEl.textContent = `Kombo: ${combo}`;
+    if (combo % 5 === 0 && level < maxLevel) {
+      level++;
+      levelEl.textContent = `Seviye: ${level}`;
+    }
+  }
+
+  function changeTarget(clickedDiv) {
+    const animals = animalsByLevel[Math.min(level - 1, maxLevel - 1)];
+    const newAnimal = animals[randomRange(0, animals.length - 1)];
+    clickedDiv.textContent = newAnimal;
+    generateTargets(); // hedefi değiştirmek için tüm kutuları yeniden oluştur
+  }
+
+  function updateTimer() {
+    timeLeft--;
+    timerEl.textContent = `Süre: ${timeLeft}`;
+    if (timeLeft <= 0) endGame();
+  }
+
+  function startGame() {
+    score = 0;
+    combo = 0;
+    multiplier = 1;
+    level = 1;
+    timeLeft = gameDuration;
+    gameActive = true;
+    scoreEl.textContent = `Puan: ${score}`;
+    comboEl.textContent = `Kombo: ${combo}`;
+    levelEl.textContent = `Seviye: ${level}`;
+    timerEl.textContent = `Süre: ${timeLeft}`;
+    generateTargets();
+    endScreen.style.display = 'none';
+
+    clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+
+  function endGame() {
+    gameActive = false;
+    clearInterval(timerInterval);
+    endScreen.style.display = 'flex';
+    finalScoreSpan.textContent = score;
+    saveScore(score);
+    updateScoreList();
+  }
+
+  function saveScore(newScore) {
+    const scores = JSON.parse(localStorage.getItem('animalTapScores') || '[]');
+    scores.push(newScore);
+    scores.sort((a, b) => b - a);
+    const top10 = scores.slice(0, 10);
+    localStorage.setItem('animalTapScores', JSON.stringify(top10));
+  }
+
+  function updateScoreList() {
+    const scores = JSON.parse(localStorage.getItem('animalTapScores') || '[]');
+    scoreList.innerHTML = '';
+    scores.forEach((s, i) => {
+      const li = document.createElement('li');
+      li.textContent = `${i + 1}. ${s} puan`;
+      scoreList.appendChild(li);
+    });
+  }
+
+  restartBtn.addEventListener('click', startGame);
+  backToGameBtn.addEventListener('click', () => {
+    switchTab('game');
+  });
+
+  function switchTab(tabId) {
+    tabContents.forEach(c => c.classList.remove('active'));
+    tabButtons.forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+
+    if (tabId === 'scores') updateScoreList();
+  }
+
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabId = btn.getAttribute('data-tab');
+      switchTab(tabId);
+    });
+  });
+
+  // Başlangıçta oyunu başlat
+  startGame();
+})();
+</script>
+</body>
+</html>
+
